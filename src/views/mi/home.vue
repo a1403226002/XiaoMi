@@ -33,14 +33,16 @@
 
         <!-- 内容区域 -->
         <el-main class="main">
-            <div class="goods-list">
-                <div class="item" v-for="(item,index) in goodsList" :key="index">
-                    <img :src="'/static/img/'+item.productImage"/>
-                    <p>{{item.productName}}</p>
-                    <p>${{item.salePrice}}</p>
-                    <el-button plain type="danger">加入购物车</el-button>
-                </div>
+          <div class="goods-list">
+            <div class="item" v-for="(item,index) in filterGoods" :key="index">
+              <img :src="'/static/img/'+item.productImage" />
+              <div>
+                <p>{{item.productName}}</p>
+                <p>${{item.salePrice}}</p>
+              </div>
+              <el-button plain type="danger">加入购物车</el-button>
             </div>
+          </div>
         </el-main>
       </el-container>
     </el-container>
@@ -51,7 +53,7 @@
 export default {
   name: "",
   mounted() {
-      this.getGoodsList();
+    this.getGoodsList();
   },
   data() {
     return {
@@ -70,7 +72,37 @@ export default {
       goodsList: [],
     };
   },
-  computed: {},
+  computed: {
+    //   商品的排序+价格区间
+    filterGoods() {
+      let goods = this.goodsList;
+
+      //升序降序排列
+      goods.sort((a, b) => {
+        if (this.sort == 1) {
+          //升序
+          return a.salePrice - b.salePrice;
+        } else if (this.sort == 2) {
+          //降序
+          return b.salePrice - a.salePrice;
+        }
+      });
+
+      //价格区间搜索
+      if (this.pIndex > 0) {
+        //先获取价格区间
+        let price = this.prices[this.pIndex];
+        //字符串分割成数组
+        let arr = price.split("-");
+        //价格过滤  最小值 <   <最大值
+        goods = goods.filter((item) => {
+          return item.salePrice >= arr[0] && item.salePrice < arr[1];
+        });
+      }
+
+      return goods;
+    },
+  },
   methods: {
     //改变升序或者价格的降序
     changSort() {
@@ -82,13 +114,12 @@ export default {
     },
 
     //获取商品的列表数据
-    getGoodsList(){
-        this.$axios.get("/static/data.json")
-        .then(res=>{
-            console.log(res);
-            this.goodsList = res.result.list;
-        })
-    }
+    getGoodsList() {
+      this.$axios.get("/static/data.json").then((res) => {
+        console.log(res);
+        this.goodsList = res.result.list;
+      });
+    },
   },
 };
 </script>
@@ -137,29 +168,76 @@ export default {
       }
     }
   }
-  
-  .main{
-      width: 85% !important;
-      .goods-list{
+
+  @media screen and (min-width: 960px) {
+    .left {
+      display: block;
+    }
+  }
+  @media screen and (max-width: 960px) {
+    .left {
+      display: none;
+    }
+  }
+
+  .main {
+    width: 85% !important;
+    .goods-list {
+      width: 100%;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      .item {
+        padding: 10px;
+        box-sizing: border-box;
+        margin: 1%;
+        min-height: 80px;
+        background: #fff;
+        p:nth-of-type(2) {
+          color: #a00000;
+          font-size: 18px;
+        }
+        img {
           width: 100%;
-          display: flex;
-          flex-wrap: wrap;
-          align-items: center;
-          .item{
-              padding: 10px;
-              box-sizing: border-box;
-              width: 23%;
-              margin:1%;
-              min-height: 80px;
-              background: #FFF;
-              img{
-                  width: 100%;
-              }
-              .el-button{
-                  width: 100%;
-              }
-          }
+        }
+        .el-button {
+          width: 100%;
+        }
       }
+
+      @media screen and (min-width: 960px) {
+        .item {
+          width: 23%;
+        }
+      }
+      @media screen and (min-width: 750px) and (max-width: 960px) {
+        .item {
+          width: 48%;
+        }
+      }
+
+      @media screen and(max-width:750px) {
+        .item {
+          width: 98%;
+          display: flex;
+          align-items: center;
+
+          img {
+            width: 30%;
+          }
+          div{
+              flex:1;
+          }
+          .el-button {
+            width: 20%;
+          }
+        }
+      }
+      .item:hover {
+        transform: scale(1.05);
+        box-shadow: 0px 3px 5px rgba($color: #000000, $alpha: 0.6);
+      }
+    }
   }
 }
 </style>
